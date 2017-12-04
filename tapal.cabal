@@ -2,7 +2,7 @@ name:                tapal
 version:             0.1.0.0
 synopsis:            Short description of your package
 homepage:            https://github.com/missingfaktor/tapal#readme
-license:             Apache License Version 2.0
+license:             Apache-2.0
 license-file:        LICENSE
 author:              Rahul Goma Phulore
 maintainer:          rahul.phulore.999+tapal@gmail.com
