@@ -16,7 +16,11 @@ data CliOptions = CliOptions { request :: String O.<?> "Path for the request spe
                              , scope :: Maybe String O.<?> "Scope in which the request is to be made"
                              } deriving (Generic, Show)
 
-instance O.ParseRecord CliOptions
+cliOptionModifiers :: O.Modifiers
+cliOptionModifiers = O.defaultModifiers { shortNameModifier = O.firstLetter }
+
+instance O.ParseRecord CliOptions where
+  parseRecord = parseRecordWithModifiers cliOptionModifiers
 
 someFunc :: IO ()
 someFunc = do
