@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Tapal
 
 main :: IO ()
 main = someFunc

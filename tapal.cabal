@@ -16,7 +16,7 @@ description:         Please see the README on Github at <https://github.com/miss
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     Tapal
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
