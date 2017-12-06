@@ -9,8 +9,9 @@
 module Main where
 
 import Options.Generic as O
+import Tapal as T
 
-data CliOptions = CliOptions { request :: String O.<?> "Path for the request specification"
+data CliOptions = CliOptions { probe :: String O.<?> "Path for the probe specification"
                              , scope :: Maybe String O.<?> "Scope in which the request is to be made"
                              } deriving (Generic, Show)
 
@@ -23,6 +24,8 @@ instance O.ParseRecord CliOptions where
 cliApp :: IO ()
 cliApp = do
   cliOptions <- O.getRecord @_ @CliOptions "Tapal, a lightweight command line alternative to Postman"
+  probe' <- T.probeAtDirectoryPath $ unHelpful $ probe $ cliOptions
+  print probe'
   print cliOptions
 
 main :: IO ()
