@@ -1,26 +1,31 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Probe
   ( Probe
   , probeAtDirectoryPath
   ) where
 
 import Control.Monad
-import System.IO.Error as E
-import System.FilePath as F
-import System.Directory as D
+import Control.Monad.Trans
+import Control.Monad.Except
+import Control.Exception
+import System.IO.Error
+import System.FilePath
+import System.Directory
 
 -- A probe is an instance of an "API probe", comprising the request to be made, scripts to run afterwards, variables
 -- to set, and so on.
 newtype Probe = Probe { directory :: String
                       } deriving (Show)
 
-requireDirectoryExists :: FilePath -> IO ()
+requireDirectoryExists :: (MonadError IOException m, MonadIO m) => FilePath -> m ()
 requireDirectoryExists directory = do
-  itDoes <- D.doesDirectoryExist directory
+  itDoes <- liftIO $ doesDirectoryExist directory
   unless itDoes $
-    E.ioError $ E.userError $ "Directory does not exist: " ++ directory
+    throwError $ userError $ "Directory does not exist: " ++ directory
 
 -- A probe will be mapped to a directory, with its individual components represented by files therein.
-probeAtDirectoryPath :: FilePath -> IO Probe
+probeAtDirectoryPath :: MonadIO m => FilePath -> m Probe
 probeAtDirectoryPath directory = do
-  requireDirectoryExists directory
+  liftIO $ requireDirectoryExists directory
   return $ Probe directory
