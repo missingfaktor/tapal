@@ -8,23 +8,33 @@
 
 module Main where
 
-import Options.Generic as O
+import Control.Applicative
+import Options.Applicative as O
 import Tapal as T
+import Data.Monoid
 
-data CliOptions = CliOptions { probe :: String O.<?> "Path for the probe specification"
-                             , scope :: Maybe String O.<?> "Scope in which the request is to be made"
-                             } deriving (Generic, Show)
+data CliOptions = CliOptions { probe :: String
+                             , scope :: Maybe String
+                             } deriving (Show)
 
-cliOptionModifiers :: O.Modifiers
-cliOptionModifiers = O.defaultModifiers { shortNameModifier = O.firstLetter }
+cliOptionsParser :: O.Parser CliOptions
+cliOptionsParser =
+  CliOptions <$> O.strOption (O.long "probe"
+                           <> O.short 'p'
+                           <> O.help "Path for the probe specification" )
+             <*> optional (O.strOption (O.long "scope"
+                                     <> O.short 's'
+                                     <> O.help "Scope in which the request is to be made"))
 
-instance O.ParseRecord CliOptions where
-  parseRecord = parseRecordWithModifiers cliOptionModifiers
+cliOptionsParserInfo :: O.ParserInfo CliOptions
+cliOptionsParserInfo =
+  O.info (cliOptionsParser <**> O.helper)
+         (O.fullDesc <> O.progDesc "Tapal, a lightweight command line alternative to Postman")
 
 cliApp :: IO ()
 cliApp = do
-  cliOptions <- O.getRecord @_ @CliOptions "Tapal, a lightweight command line alternative to Postman"
-  probe' <- T.probeAtDirectoryPath $ unHelpful $ probe $ cliOptions
+  cliOptions <- O.execParser cliOptionsParserInfo
+  probe' <- T.probeAtDirectoryPath $ probe cliOptions
   print probe'
   print cliOptions
 
