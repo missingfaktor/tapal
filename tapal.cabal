@@ -14,22 +14,16 @@ cabal-version:       >=1.10
 
 description:         Please see the README on Github at <https://github.com/missingfaktor/tapal#readme>
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     Tapal
-                     , Probe
-  build-depends:       base >= 4.7 && < 5
-                     , filepath
-                     , directory
-                     , mtl
-  default-language:    Haskell2010
-
 executable tapal
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , tapal
+  other-modules:       Probe
+                     , Tapal
+  build-depends:       base >= 4.7 && < 5
+                     , filepath
+                     , directory
+                     , mtl
                      , optparse-applicative
                      , text
   default-language:    Haskell2010
