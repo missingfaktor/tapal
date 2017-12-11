@@ -4,31 +4,29 @@ module Tapal
 
 import GHC.Generics
 import Control.Monad
-import Control.Monad.Trans
-import Control.Monad.Except
 import Control.Monad.Catch
 import Control.Exception
-import System.IO.Error
 import Control.Applicative
-import Options.Applicative as O
 import Data.Monoid
-import Data.CaseInsensitive as CI
 import Control.Monad.IO.Class
-import System.FilePath
-import System.Directory
-import Data.Yaml as Y
-import Data.Aeson.Types as A
-import Data.ByteString
-import Data.Either.Combinators
+
+import System.FilePath (FilePath)
+import Data.Function ((&))
+import Data.Text.Encoding (encodeUtf8)
+import Utilities (raiseLeft)
+
+import Prelude hiding (readFile)
+
+import qualified Options.Applicative as O
+import qualified Data.CaseInsensitive as CI
 import qualified Data.Map as Map
-import Utilities
 import qualified Network.HTTP.Simple as N
 import qualified Network.HTTP.Types.Header as N
-import Data.Function
 import qualified Data.ByteString.Char8 as B8
-import qualified Data.Text
-import Data.Text.Encoding (encodeUtf8)
-import Prelude hiding (readFile)
+import qualified Data.Yaml as Y
+import qualified Data.Aeson.Types as A
+import qualified Data.Text as Text
+import qualified Data.ByteString as BS
 
 -- Data types
 
@@ -42,20 +40,20 @@ newtype TapalCommand = Issue { requestPath :: String
 
 -- JSON parsers (for YAML)
 
-instance FromJSON B8.ByteString where
-  parseJSON (Y.String text) =
+instance A.FromJSON B8.ByteString where
+  parseJSON (A.String text) =
     text &
-      Data.Text.unpack &
+      Text.unpack &
       B8.pack &
       pure
 
   parseJSON value = fail "Could not decode as ByteString"
 
 instance A.FromJSONKey N.HeaderName where
-  fromJSONKey = FromJSONKeyText (CI.mk . B8.pack . Data.Text.unpack)
-  fromJSONKeyList = FromJSONKeyText ((:[]) . CI.mk . B8.pack . Data.Text.unpack)
+  fromJSONKey = A.FromJSONKeyText (CI.mk . B8.pack . Text.unpack)
+  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CI.mk . B8.pack . Text.unpack)
 
-instance FromJSON Request
+instance A.FromJSON Request
 
 -- Command line parsers
 
@@ -73,9 +71,8 @@ tapalParserInfo = O.info (tapalCommandParser <**> O.helper)
 
 requestAtPath :: (MonadThrow m, MonadIO m) => FilePath -> m Request
 requestAtPath path = do
-  contents <- liftIO (readFile path)
-  request <- raiseLeft (Y.decodeEither' contents)
-  return request
+  contents <- liftIO (BS.readFile path)
+  raiseLeft (Y.decodeEither' contents)
 
 issueRequest :: (MonadThrow m, MonadIO m) => Request -> m ()
 issueRequest (Request url method headers) = do
