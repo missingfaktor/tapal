@@ -74,7 +74,7 @@ tapalParserInfo = O.info (tapalCommandParser <**> O.helper)
 requestAtPath :: (MonadThrow m, MonadIO m) => FilePath -> m Request
 requestAtPath path = do
   contents <- liftIO (readFile path)
-  request <- raiseLeft (Y.decodeEither' @Request contents)
+  request <- raiseLeft (Y.decodeEither' contents)
   return request
 
 issueRequest :: (MonadThrow m, MonadIO m) => Request -> m ()
