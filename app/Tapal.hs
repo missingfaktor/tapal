@@ -27,6 +27,7 @@ import qualified Data.Yaml as Y
 import qualified Data.Aeson.Types as A
 import qualified Data.Text as Text
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
 
 -- Data types
 
@@ -74,17 +75,23 @@ requestAtPath path = do
   contents <- liftIO (BS.readFile path)
   raiseLeft (Y.decodeEither' contents)
 
-issueRequest :: (MonadThrow m, MonadIO m) => Request -> m ()
+issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (N.Response LBS.ByteString)
 issueRequest (Request url method headers) = do
   parsedRequest <- N.parseRequest url
   let amendedRequest = parsedRequest &
                        N.setRequestMethod method &
                        N.setRequestHeaders (Map.toList headers)
-  liftIO (print amendedRequest)
+  N.httpLBS amendedRequest
 
 runTapal :: (MonadThrow m, MonadIO m) => m ()
 runTapal = do
   tapalCommand <- liftIO (O.execParser tapalParserInfo)
   liftIO (print tapalCommand)
   case tapalCommand of
-    Issue requestPath -> requestAtPath requestPath >>= issueRequest
+    Issue requestPath -> do
+      request <- requestAtPath requestPath
+      liftIO (putStrLn "Issuing a request:")
+      liftIO (print request)
+      response <- issueRequest request
+      liftIO (putStrLn "Response:")
+      liftIO (print response)
