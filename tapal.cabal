@@ -18,7 +18,8 @@ executable tapal
   hs-source-dirs:       app
   main-is:              Main.hs
   ghc-options:          -threaded -rtsopts -with-rtsopts=-N
-  other-modules:        Tapal
+  other-modules:        Utilities
+                      , Tapal
   build-depends:        base >= 4.7 && < 5
                       , filepath
                       , directory
@@ -29,6 +30,7 @@ executable tapal
                       , yaml
                       , bytestring
                       , containers
+                      , exceptions
   default-extensions:   OverloadedStrings
                       , FlexibleContexts
                       , DeriveGeneric

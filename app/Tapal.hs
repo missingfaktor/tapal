@@ -6,6 +6,7 @@ import GHC.Generics
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Except
+import Control.Monad.Catch
 import Control.Exception
 import System.IO.Error
 import Control.Applicative
@@ -18,6 +19,7 @@ import Data.Yaml as Y
 import Data.ByteString
 import Data.Either.Combinators
 import qualified Data.Map as Map
+import Utilities
 import Prelude hiding (readFile)
 
 -- Data types
@@ -47,7 +49,7 @@ instance Y.FromJSON HttpMethod where
   parseJSON (Y.String "PATCH")   = pure Patch
   parseJSON (Y.String "DELETE")  = pure Delete
   parseJSON (Y.String "CONNECT") = pure Connect
-  parseJSON _                    = fail "Bad HTTP method"
+  parseJSON badMethod            = fail ("Bad HTTP method: " ++ show badMethod)
 
 instance FromJSON Request
 
@@ -65,16 +67,16 @@ tapalParserInfo = O.info (tapalCommandParser <**> O.helper)
 
 -- Execution
 
-requestAtPath :: (MonadError IOException m, MonadIO m) => FilePath -> m Request
+requestAtPath :: (MonadThrow m, MonadIO m) => FilePath -> m Request
 requestAtPath path = do
   contents <- liftIO (readFile path)
-  request <- eitherToError (userError `mapLeft` Y.decodeEither @Request contents)
+  request <- raiseLeft (Y.decodeEither' @Request contents)
   return request
 
 issueRequest :: MonadIO m => Request -> m ()
 issueRequest request = liftIO (print request)
 
-runTapal :: (MonadError IOException m, MonadIO m) => m ()
+runTapal :: (MonadThrow m, MonadIO m) => m ()
 runTapal = do
   tapalCommand <- liftIO (O.execParser tapalParserInfo)
   liftIO (print tapalCommand)
