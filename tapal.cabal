@@ -31,10 +31,18 @@ executable tapal
                       , bytestring
                       , containers
                       , exceptions
+                      , http-conduit
+                      , bytestring
+                      , aeson
+                      , aeson-extra
+                      , case-insensitive
+                      , http-types
   default-extensions:   OverloadedStrings
                       , FlexibleContexts
                       , DeriveGeneric
                       , TypeApplications
+                      , TypeSynonymInstances
+                      , FlexibleInstances
   default-language:     Haskell2010
 
 test-suite tapal-test

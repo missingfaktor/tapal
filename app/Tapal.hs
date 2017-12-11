@@ -12,27 +12,29 @@ import System.IO.Error
 import Control.Applicative
 import Options.Applicative as O
 import Data.Monoid
+import Data.CaseInsensitive as CI
 import Control.Monad.IO.Class
 import System.FilePath
 import System.Directory
 import Data.Yaml as Y
+import Data.Aeson.Types as A
 import Data.ByteString
 import Data.Either.Combinators
 import qualified Data.Map as Map
 import Utilities
+import qualified Network.HTTP.Simple as N
+import qualified Network.HTTP.Types.Header as N
+import Data.Function
+import qualified Data.ByteString.Char8 as B8
+import qualified Data.Text
+import Data.Text.Encoding (encodeUtf8)
 import Prelude hiding (readFile)
 
 -- Data types
 
-newtype Url = Url String
-              deriving (Generic, Show)
-
-data HttpMethod = Get | Post | Put | Patch | Delete | Connect
-                  deriving (Generic, Show)
-
-data Request = Request { url :: Url
-                       , method :: HttpMethod
-                       , headers :: Map.Map String String
+data Request = Request { url :: String
+                       , method :: B8.ByteString
+                       , headers :: Map.Map N.HeaderName B8.ByteString
                        } deriving (Generic, Show)
 
 newtype TapalCommand = Issue { requestPath :: String
@@ -40,16 +42,18 @@ newtype TapalCommand = Issue { requestPath :: String
 
 -- JSON parsers (for YAML)
 
-instance Y.FromJSON Url
+instance FromJSON B8.ByteString where
+  parseJSON (Y.String text) =
+    text &
+      Data.Text.unpack &
+      B8.pack &
+      pure
 
-instance Y.FromJSON HttpMethod where
-  parseJSON (Y.String "GET")     = pure Get
-  parseJSON (Y.String "POST")    = pure Post
-  parseJSON (Y.String "PUT")     = pure Put
-  parseJSON (Y.String "PATCH")   = pure Patch
-  parseJSON (Y.String "DELETE")  = pure Delete
-  parseJSON (Y.String "CONNECT") = pure Connect
-  parseJSON badMethod            = fail ("Bad HTTP method: " ++ show badMethod)
+  parseJSON value = fail "Could not decode as ByteString"
+
+instance A.FromJSONKey N.HeaderName where
+  fromJSONKey = FromJSONKeyText (CI.mk . B8.pack . Data.Text.unpack)
+  fromJSONKeyList = FromJSONKeyText ((:[]) . CI.mk . B8.pack . Data.Text.unpack)
 
 instance FromJSON Request
 
@@ -73,8 +77,13 @@ requestAtPath path = do
   request <- raiseLeft (Y.decodeEither' @Request contents)
   return request
 
-issueRequest :: MonadIO m => Request -> m ()
-issueRequest request = liftIO (print request)
+issueRequest :: (MonadThrow m, MonadIO m) => Request -> m ()
+issueRequest (Request url method headers) = do
+  parsedRequest <- N.parseRequest url
+  let amendedRequest = parsedRequest &
+                       N.setRequestMethod method &
+                       N.setRequestHeaders (Map.toList headers)
+  liftIO (print amendedRequest)
 
 runTapal :: (MonadThrow m, MonadIO m) => m ()
 runTapal = do
