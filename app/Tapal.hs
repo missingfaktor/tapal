@@ -67,9 +67,6 @@ tapalParserInfo = O.info (tapalCommandParser <**> O.helper)
 
 requestAtPath :: (MonadError IOException m, MonadIO m) => FilePath -> m Request
 requestAtPath path = do
-  itDoes <- liftIO (doesFileExist path)
-  unless itDoes $
-    throwError (userError ("File does not exist: " ++ path))
   contents <- liftIO (readFile path)
   request <- eitherToError (userError `mapLeft` Y.decodeEither @Request contents)
   return request
