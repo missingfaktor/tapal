@@ -1,0 +1,8 @@
+- Organise into proper modules.
+- Pretty-print everything. 
+- Use colours. https://batterseapower.github.io/ansi-wl-pprint/
+- Write tests.
+- Scopes and variables.
+- Lua scripting.
+- Lua tests.
+- Structured output for use with other tools.
