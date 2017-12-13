@@ -28,6 +28,7 @@ import qualified Data.Aeson.Types as A
 import qualified Data.Text as Text
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.Encoding as TE
 
 -- Data types
 
@@ -42,17 +43,12 @@ newtype TapalCommand = Issue { requestPath :: String
 -- JSON parsers (for YAML)
 
 instance A.FromJSON B8.ByteString where
-  parseJSON (A.String text) =
-    text &
-      Text.unpack &
-      B8.pack &
-      pure
-
+  parseJSON (A.String text) = pure (TE.encodeUtf8 text)
   parseJSON value = fail "Could not decode as ByteString"
 
 instance A.FromJSONKey N.HeaderName where
-  fromJSONKey = A.FromJSONKeyText (CI.mk . B8.pack . Text.unpack)
-  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CI.mk . B8.pack . Text.unpack)
+  fromJSONKey = A.FromJSONKeyText (CI.mk . TE.encodeUtf8)
+  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CI.mk . TE.encodeUtf8)
 
 instance A.FromJSON Request
 
