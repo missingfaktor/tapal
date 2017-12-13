@@ -43,6 +43,8 @@ executable tapal
                       , TypeApplications
                       , TypeSynonymInstances
                       , FlexibleInstances
+                      , LambdaCase
+                      , GeneralizedNewtypeDeriving
   default-language:     Haskell2010
 
 test-suite tapal-test

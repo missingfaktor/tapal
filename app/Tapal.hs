@@ -19,7 +19,6 @@ import qualified Options.Applicative as O
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Map as Map
 import qualified Network.HTTP.Simple as N
-import qualified Network.HTTP.Types.Header as N
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Yaml as Y
 import qualified Data.Aeson.Types as A
@@ -29,9 +28,14 @@ import qualified Data.Text.Encoding as TE
 
 -- Data types
 
+-- These newtypes were written so we can write type-class instances for the underlying types.
+-- RString simply means Strings used in Request fields such as method and headers. I could not think of a better name.
+newtype RString = RString B8.ByteString deriving (Show)
+newtype CaseInsensitiveRString = CaseInsensitiveRString (CI.CI BS.ByteString) deriving (Show, Eq, Ord)
+
 data Request = Request { url :: String
-                       , method :: B8.ByteString
-                       , headers :: Map.Map N.HeaderName B8.ByteString
+                       , method :: RString
+                       , headers :: Map.Map CaseInsensitiveRString RString
                        } deriving (Generic, Show)
 
 newtype TapalCommand = Issue { requestPath :: String
@@ -39,13 +43,13 @@ newtype TapalCommand = Issue { requestPath :: String
 
 -- JSON parsers (for YAML)
 
-instance A.FromJSON B8.ByteString where
-  parseJSON (A.String text) = pure (TE.encodeUtf8 text)
+instance A.FromJSON RString where
+  parseJSON (A.String text) = pure (RString (TE.encodeUtf8 text))
   parseJSON _ = fail "Could not decode as ByteString"
 
-instance A.FromJSONKey N.HeaderName where
-  fromJSONKey = A.FromJSONKeyText (CI.mk . TE.encodeUtf8)
-  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CI.mk . TE.encodeUtf8)
+instance A.FromJSONKey CaseInsensitiveRString where
+  fromJSONKey = A.FromJSONKeyText (CaseInsensitiveRString . CI.mk . TE.encodeUtf8)
+  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CaseInsensitiveRString . CI.mk . TE.encodeUtf8)
 
 instance A.FromJSON Request
 
@@ -69,11 +73,13 @@ requestAtPath path = do
   raiseLeft (Y.decodeEither' contents)
 
 issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (N.Response LBS.ByteString)
-issueRequest (Request url' method' headers') = do
+issueRequest (Request url' (RString method') headers') = do
   parsedRequest <- N.parseRequest url'
   let amendedRequest = parsedRequest &
                        N.setRequestMethod method' &
-                       N.setRequestHeaders (Map.toList headers')
+                       N.setRequestHeaders (headers' &
+                                             Map.toList &
+                                             ((\case (CaseInsensitiveRString k, RString v) -> (k, v)) `map`))
   N.httpLBS amendedRequest
 
 runTapal :: (MonadThrow m, MonadIO m) => m ()
