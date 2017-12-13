@@ -69,11 +69,11 @@ requestAtPath path = do
   raiseLeft (Y.decodeEither' contents)
 
 issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (N.Response LBS.ByteString)
-issueRequest (Request url method headers) = do
-  parsedRequest <- N.parseRequest url
+issueRequest (Request url' method' headers') = do
+  parsedRequest <- N.parseRequest url'
   let amendedRequest = parsedRequest &
-                       N.setRequestMethod method &
-                       N.setRequestHeaders (Map.toList headers)
+                       N.setRequestMethod method' &
+                       N.setRequestHeaders (Map.toList headers')
   N.httpLBS amendedRequest
 
 runTapal :: (MonadThrow m, MonadIO m) => m ()
@@ -81,8 +81,8 @@ runTapal = do
   tapalCommand <- liftIO (O.execParser tapalParserInfo)
   liftIO (print tapalCommand)
   case tapalCommand of
-    Issue requestPath -> do
-      request <- requestAtPath requestPath
+    Issue requestPath' -> do
+      request <- requestAtPath requestPath'
       liftIO (putStrLn "Issuing a request:")
       liftIO (print request)
       response <- issueRequest request
