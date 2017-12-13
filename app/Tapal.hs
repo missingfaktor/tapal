@@ -5,14 +5,12 @@ module Tapal
 import GHC.Generics
 import Control.Monad
 import Control.Monad.Catch
-import Control.Exception
 import Control.Applicative
 import Data.Monoid
 import Control.Monad.IO.Class
 
 import System.FilePath (FilePath)
 import Data.Function ((&))
-import Data.Text.Encoding (encodeUtf8)
 import Utilities (raiseLeft)
 
 import Prelude hiding (readFile)
@@ -25,7 +23,6 @@ import qualified Network.HTTP.Types.Header as N
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Yaml as Y
 import qualified Data.Aeson.Types as A
-import qualified Data.Text as Text
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.Encoding as TE
