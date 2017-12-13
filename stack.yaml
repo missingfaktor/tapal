@@ -1,1 +1,7 @@
 resolver: lts-9.17
+packages:
+ - "."
+ - location:
+    git: git@github.com:amarpotghan/hpygments.git
+    commit: 0769becfcf2eb51925ca112919a3e2e9dc06484c
+    extra-dep: true
