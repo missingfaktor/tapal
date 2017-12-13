@@ -41,7 +41,7 @@ newtype TapalCommand = Issue { requestPath :: String
 
 instance A.FromJSON B8.ByteString where
   parseJSON (A.String text) = pure (TE.encodeUtf8 text)
-  parseJSON value = fail "Could not decode as ByteString"
+  parseJSON _ = fail "Could not decode as ByteString"
 
 instance A.FromJSONKey N.HeaderName where
   fromJSONKey = A.FromJSONKeyText (CI.mk . TE.encodeUtf8)
