@@ -38,6 +38,8 @@ data Request = Request { url :: String
                        , headers :: Map.Map CaseInsensitiveRString RString
                        } deriving (Generic, Show)
 
+newtype Response a = Response (N.Response a) deriving (Show)
+
 newtype TapalCommand = Issue { requestPath :: String
                              } deriving (Show)
 
@@ -72,7 +74,7 @@ requestAtPath path = do
   contents <- liftIO (BS.readFile path)
   raiseLeft (Y.decodeEither' contents)
 
-issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (N.Response LBS.ByteString)
+issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (Response LBS.ByteString)
 issueRequest (Request url' (RString method') headers') = do
   parsedRequest <- N.parseRequest url'
   let amendedRequest = parsedRequest &
@@ -80,7 +82,8 @@ issueRequest (Request url' (RString method') headers') = do
                        N.setRequestHeaders (headers' &
                                              Map.toList &
                                              ((\case (CaseInsensitiveRString k, RString v) -> (k, v)) `map`))
-  N.httpLBS amendedRequest
+  response <- N.httpLBS amendedRequest
+  return (Response response)
 
 runTapal :: (MonadThrow m, MonadIO m) => m ()
 runTapal = do
