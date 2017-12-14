@@ -20,6 +20,7 @@ import qualified Options.Applicative as O
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Map as Map
 import qualified Network.HTTP.Simple as N
+import qualified Network.HTTP.Types as N
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Yaml as Y
 import qualified Data.Aeson.Types as A
@@ -60,7 +61,15 @@ instance A.FromJSON Request
 -- Highlightable instances
 
 instance SH.Highlightable Request
-instance Show a => SH.Highlightable (Response a)
+
+instance SH.Highlightable N.Status where
+  highlight status = do
+    let statusCode' = SH.showInColor SH.Yellow (N.statusCode status)
+    let statusMessage' = SH.showInColor SH.Green (N.statusMessage status)
+    return (statusCode' ++ " " ++ statusMessage')
+
+instance Show a => SH.Highlightable (Response a) where
+  highlight (Response response) = SH.highlight (N.getResponseStatus response)
 
 -- Command line parsers
 
