@@ -43,8 +43,8 @@ data Request = Request { url :: String
 
 newtype Response a = Response (N.Response a) deriving (Show)
 
-newtype TapalCommand = Issue { requestPath :: String
-                             } deriving (Show)
+newtype TapalCommand = RequestCommand { requestPath :: String
+                                      } deriving (Show)
 
 -- JSON parsers (for YAML)
 
@@ -73,11 +73,11 @@ instance Show a => SH.Highlightable (Response a) where
 
 -- Command line parsers
 
-issueCommandParser :: O.Parser TapalCommand
-issueCommandParser = Issue <$> O.argument O.str (O.metavar "REQUEST_PATH")
+requestCommandParser :: O.Parser TapalCommand
+requestCommandParser = RequestCommand <$> O.argument O.str (O.metavar "REQUEST_PATH")
 
 tapalCommandParser :: O.Parser TapalCommand
-tapalCommandParser = O.hsubparser (O.command "issue" (O.info issueCommandParser (O.progDesc "Issue a request")))
+tapalCommandParser = O.hsubparser (O.command "request" (O.info requestCommandParser (O.progDesc "Make a request")))
 
 tapalParserInfo :: O.ParserInfo TapalCommand
 tapalParserInfo = O.info (tapalCommandParser <**> O.helper)
@@ -90,8 +90,8 @@ requestAtPath path = do
   contents <- liftIO (BS.readFile path)
   raiseLeft (Y.decodeEither' contents)
 
-issueRequest :: (MonadThrow m, MonadIO m) => Request -> m (Response LBS.ByteString)
-issueRequest (Request url' (RString method') headers') = do
+makeRequest :: (MonadThrow m, MonadIO m) => Request -> m (Response LBS.ByteString)
+makeRequest (Request url' (RString method') headers') = do
   parsedRequest <- N.parseRequest url'
   let amendedRequest = parsedRequest &
                        N.setRequestMethod method' &
@@ -104,12 +104,12 @@ runTapal = do
   tapalCommand <- liftIO (O.execParser tapalParserInfo)
   liftIO (print tapalCommand)
   case tapalCommand of
-    Issue requestPath' -> do
+    RequestCommand requestPath' -> do
       request <- requestAtPath requestPath'
       highlightedRequest <- SH.highlight request
-      liftIO (putStrLn "Issuing a request:")
+      liftIO (putStrLn "Making a request:")
       liftIO (putStrLn highlightedRequest)
-      response <- issueRequest request
+      response <- makeRequest request
       highlightedResponse <- SH.highlight response
       liftIO (putStrLn "Response:")
       liftIO (putStrLn highlightedResponse)
