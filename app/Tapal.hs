@@ -12,6 +12,7 @@ import Control.Monad.IO.Class
 import System.FilePath (FilePath)
 import Data.Function ((&))
 import Utilities (raiseLeft)
+import Data.Coerce (coerce)
 
 import Prelude hiding (readFile)
 
@@ -47,12 +48,12 @@ newtype TapalCommand = Issue { requestPath :: String
 -- JSON parsers (for YAML)
 
 instance A.FromJSON RString where
-  parseJSON (A.String text) = pure (RString (TE.encodeUtf8 text))
+  parseJSON (A.String text) = pure (coerce (TE.encodeUtf8 text))
   parseJSON _ = fail "Could not decode as ByteString"
 
 instance A.FromJSONKey CaseInsensitiveRString where
-  fromJSONKey = A.FromJSONKeyText (CaseInsensitiveRString . CI.mk . TE.encodeUtf8)
-  fromJSONKeyList = A.FromJSONKeyText ((:[]) . CaseInsensitiveRString . CI.mk . TE.encodeUtf8)
+  fromJSONKey = A.FromJSONKeyText (coerce . CI.mk . TE.encodeUtf8)
+  fromJSONKeyList = A.FromJSONKeyText ((:[]) . coerce . CI.mk . TE.encodeUtf8)
 
 instance A.FromJSON Request
 
@@ -85,9 +86,7 @@ issueRequest (Request url' (RString method') headers') = do
   parsedRequest <- N.parseRequest url'
   let amendedRequest = parsedRequest &
                        N.setRequestMethod method' &
-                       N.setRequestHeaders (headers' &
-                                             Map.toList &
-                                             ((\case (CaseInsensitiveRString k, RString v) -> (k, v)) `map`))
+                       N.setRequestHeaders (coerce (Map.toList headers'))
   response <- N.httpLBS amendedRequest
   return (Response response)
 
