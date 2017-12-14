@@ -25,6 +25,7 @@ import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.Encoding as TE
+import qualified SyntaxHighlighting as SH
 
 -- Data types
 
@@ -54,6 +55,11 @@ instance A.FromJSONKey CaseInsensitiveRString where
   fromJSONKeyList = A.FromJSONKeyText ((:[]) . CaseInsensitiveRString . CI.mk . TE.encodeUtf8)
 
 instance A.FromJSON Request
+
+-- Highlightable instances
+
+instance SH.Highlightable Request
+instance Show a => SH.Highlightable (Response a)
 
 -- Command line parsers
 
@@ -85,15 +91,17 @@ issueRequest (Request url' (RString method') headers') = do
   response <- N.httpLBS amendedRequest
   return (Response response)
 
-runTapal :: (MonadThrow m, MonadIO m) => m ()
+runTapal :: (MonadThrow m, SH.MonadHighlight m, MonadIO m) => m ()
 runTapal = do
   tapalCommand <- liftIO (O.execParser tapalParserInfo)
   liftIO (print tapalCommand)
   case tapalCommand of
     Issue requestPath' -> do
       request <- requestAtPath requestPath'
+      highlightedRequest <- SH.highlight request
       liftIO (putStrLn "Issuing a request:")
-      liftIO (print request)
+      liftIO (putStrLn highlightedRequest)
       response <- issueRequest request
+      highlightedResponse <- SH.highlight response
       liftIO (putStrLn "Response:")
-      liftIO (print response)
+      liftIO (putStrLn highlightedResponse)
