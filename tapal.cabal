@@ -37,6 +37,7 @@ executable tapal
                       , aeson-extra
                       , case-insensitive
                       , http-types
+                      , hpygments
   default-extensions:   OverloadedStrings
                       , FlexibleContexts
                       , DeriveGeneric
