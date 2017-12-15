@@ -16,10 +16,13 @@ description:         Please see the README on Github at <https://github.com/miss
 
 executable tapal
   hs-source-dirs:       app
-  main-is:              Main.hs
-  ghc-options:          -Wall -threaded -rtsopts -with-rtsopts=-N
-  other-modules:        Utilities
-                      , SyntaxHighlighting
+  main-is:              Tapal.hs
+  ghc-options:          -Wall -threaded -rtsopts -with-rtsopts=-N -main-is Tapal
+  other-modules:        Tapal.Utilities
+                      , Tapal.AnsiColors
+                      , Tapal.SyntaxHighlighting
+                      , Tapal.CommandLine
+                      , Tapal.Types
                       , Tapal
   build-depends:        base >= 4.7 && < 5
                       , filepath
@@ -39,6 +42,7 @@ executable tapal
                       , case-insensitive
                       , http-types
                       , hpygments
+                      , unordered-containers
   default-extensions:   OverloadedStrings
                       , FlexibleContexts
                       , DeriveGeneric
@@ -48,6 +52,7 @@ executable tapal
                       , LambdaCase
                       , GeneralizedNewtypeDeriving
                       , DefaultSignatures
+                      , StandaloneDeriving
   default-language:     Haskell2010
 
 test-suite tapal-test

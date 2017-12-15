@@ -1,4 +1,6 @@
-module Utilities where
+module Tapal.Utilities
+  ( raiseLeft
+  ) where
 
 import Control.Monad.Catch
 
