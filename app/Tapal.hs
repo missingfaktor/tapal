@@ -14,7 +14,6 @@ import Prelude hiding (readFile)
 import qualified Network.HTTP.Simple as N
 import qualified Data.Yaml as Y
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as LBS
 
 import qualified Tapal.Types as T
 import qualified Tapal.SyntaxHighlighting as SH
@@ -26,7 +25,7 @@ requestAtPath path = do
   contents <- liftIO (BS.readFile path)
   U.raiseLeft (Y.decodeEither' contents)
 
-makeRequest :: (MonadThrow m, MonadIO m) => T.Request -> m (T.Response LBS.ByteString)
+makeRequest :: (MonadThrow m, MonadIO m) => T.Request -> m T.Response
 makeRequest (T.Request (T.Url url) (T.HttpMethod method) (T.Headers headers)) = do
   let headers' = map (\case (T.Header key value) -> (key, value)) headers
   parsedRequest <- N.parseRequest url
@@ -34,7 +33,7 @@ makeRequest (T.Request (T.Url url) (T.HttpMethod method) (T.Headers headers)) = 
                        N.setRequestMethod method &
                        N.setRequestHeaders headers'
   response <- N.httpLBS amendedRequest
-  return (T.Response response)
+  return (T.refashionResponse response)
 
 runTapal :: (MonadThrow m, SH.MonadHighlight m, MonadIO m) => m ()
 runTapal = do

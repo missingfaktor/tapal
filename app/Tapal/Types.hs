@@ -5,6 +5,8 @@ module Tapal.Types
   , Headers(..)
   , Request(..)
   , Response(..)
+  , refashionResponseStatus
+  , refashionResponse
   ) where
 
 import qualified Data.CaseInsensitive as CI
@@ -42,10 +44,22 @@ data Request = Request
   , headers :: Headers
   } deriving (Generic, Show)
 
--- TODO Rewrite to only use the fields we actually use.
-newtype Response a = Response
-  { getResponse :: N.Response a
+data ResponseStatus = ResponseStatus
+  { statusCode :: Int
+  , statusMessage :: BS.ByteString
   } deriving (Show)
+
+newtype Response = Response
+  { responseStatus :: ResponseStatus
+  } deriving (Show)
+
+-- "Refashioning" from Network.HTTP types to our types
+
+refashionResponseStatus :: N.Status -> ResponseStatus
+refashionResponseStatus nStatus = ResponseStatus (N.statusCode nStatus) (N.statusMessage nStatus)
+
+refashionResponse :: N.Response a -> Response
+refashionResponse nResponse = Response (refashionResponseStatus (N.getResponseStatus nResponse))
 
 -- JSON parsers (for YAML)
 
@@ -70,11 +84,11 @@ instance J.FromJSON Request
 
 instance SH.Highlightable Request
 
-instance SH.Highlightable N.Status where
+instance SH.Highlightable ResponseStatus where
   highlight status = do
-    let statusCode' = SH.showInColor SH.Yellow (N.statusCode status)
-    let statusMessage' = SH.showInColor SH.Green (N.statusMessage status)
+    let statusCode' = SH.showInColor SH.Yellow (statusCode status)
+    let statusMessage' = SH.showInColor SH.Green (statusMessage status)
     return (statusCode' ++ " " ++ statusMessage')
 
-instance Show a => SH.Highlightable (Response a) where
-  highlight (Response response) = SH.highlight (N.getResponseStatus response)
+instance SH.Highlightable Response where
+  highlight response = SH.highlight (responseStatus response)
