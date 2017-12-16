@@ -26,12 +26,11 @@ requestAtPath path = do
   U.raiseLeft (Y.decodeEither' contents)
 
 makeRequest :: (MonadThrow m, MonadIO m) => T.Request -> m T.Response
-makeRequest (T.Request (T.Url url) (T.HttpMethod method) (T.Headers headers)) = do
-  let headers' = map (\case (T.Header key value) -> (key, value)) headers
-  parsedRequest <- N.parseRequest url
+makeRequest (T.Request url method headers) = do
+  parsedRequest <- N.parseRequest (T.unrefashionUrl url)
   let amendedRequest = parsedRequest &
-                       N.setRequestMethod method &
-                       N.setRequestHeaders headers'
+                       N.setRequestMethod (T.unrefashionMethod method) &
+                       N.setRequestHeaders (map T.unrefashionHeader (T.getHeaders headers))
   response <- N.httpLBS amendedRequest
   return (T.refashionResponse response)
 

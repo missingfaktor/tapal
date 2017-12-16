@@ -7,6 +7,9 @@ module Tapal.Types
   , Response(..)
   , refashionResponseStatus
   , refashionResponse
+  , unrefashionUrl
+  , unrefashionMethod
+  , unrefashionHeader
   ) where
 
 import qualified Data.CaseInsensitive as CI
@@ -60,6 +63,15 @@ refashionResponseStatus nStatus = ResponseStatus (N.statusCode nStatus) (N.statu
 
 refashionResponse :: N.Response a -> Response
 refashionResponse nResponse = Response (refashionResponseStatus (N.getResponseStatus nResponse))
+
+unrefashionUrl :: Url -> String
+unrefashionUrl = getUrl
+
+unrefashionMethod :: HttpMethod -> BS.ByteString
+unrefashionMethod = getHttpMethod
+
+unrefashionHeader :: Header -> N.Header
+unrefashionHeader (Header key value) = (key, value)
 
 -- JSON parsers (for YAML)
 
