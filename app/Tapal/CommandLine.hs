@@ -9,8 +9,9 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Applicative ((<**>))
 import Data.Monoid ((<>))
 
-newtype TapalCommand = RequestCommand { requestPath :: String
-                                      } deriving (Show)
+newtype TapalCommand = RequestCommand
+  { requestPath :: String
+  } deriving (Show)
 
 requestCommandParser :: O.Parser TapalCommand
 requestCommandParser = RequestCommand <$> O.argument O.str (O.metavar "REQUEST_PATH")

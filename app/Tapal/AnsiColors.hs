@@ -3,14 +3,15 @@ module Tapal.AnsiColors
   , showInColor
   ) where
 
-data AnsiColor = Black
-               | Red
-               | Green
-               | Yellow
-               | Blue
-               | Magenta
-               | Cyan
-               | White
+data AnsiColor =
+    Black
+  | Red
+  | Green
+  | Yellow
+  | Blue
+  | Magenta
+  | Cyan
+  | White
 
 ansiEscapeCode :: AnsiColor -> String
 ansiEscapeCode Black   = "\27[30m"
